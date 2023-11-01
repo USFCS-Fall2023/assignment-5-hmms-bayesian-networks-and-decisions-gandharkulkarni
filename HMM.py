@@ -35,10 +35,24 @@ class HMM:
         """reads HMM structure from transition (basename.trans),
         and emission (basename.emit) files,
         as well as the probabilities."""
+        with open(basename+'.trans', 'r') as file:
+            lines = file.readlines()
+        for line in lines:
+            current_state, next_state, prob_val = line.split()
+            if(current_state not in self.transitions):
+                self.transitions[current_state] = {}
+            self.transitions[current_state][next_state] = float(prob_val)
+
+        with open(basename+'.emit', 'r') as file:
+            lines = file.readlines()
+        for line in lines:
+            current_state, next_state, prob_val = line.split()
+            if (current_state not in self.emissions):
+                self.emissions[current_state] = {}
+            self.emissions[current_state][next_state] = float(prob_val)
 
 
-
-   ## you do this.
+    ## you do this.
     def generate(self, n):
         """return an n-length observation by randomly sampling from this HMM."""
 
@@ -55,5 +69,8 @@ class HMM:
 
 
 
-
+hmm_obj = HMM()
+hmm_obj.load('two_english')
+print(hmm_obj.transitions)
+print(hmm_obj.emissions)
 
