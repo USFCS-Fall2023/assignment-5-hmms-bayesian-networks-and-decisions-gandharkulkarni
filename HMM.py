@@ -4,7 +4,7 @@ import random
 import argparse
 import codecs
 import os
-import numpy
+import numpy as np
 
 # observations
 class Observation:
@@ -55,8 +55,18 @@ class HMM:
     ## you do this.
     def generate(self, n):
         """return an n-length observation by randomly sampling from this HMM."""
+        observation = ["#"]
+        for i in range(n-1):
+            last_state = observation[-1]
+            next_states = list(self.transitions[last_state].keys())
+            probabilities = [self.transitions[last_state][state] for state in next_states]
+            # print(next_states)
+            # print(probabilities)
+            next_state = np.random.choice(next_states, p=probabilities)
+            # print(next_state)
+            observation.append(next_state)
 
-
+        return observation
 
     ## you do this: Implement the Viterbi alborithm. Given an Observation (a list of outputs or emissions)
     ## determine the most likely sequence of states.
@@ -73,4 +83,4 @@ hmm_obj = HMM()
 hmm_obj.load('two_english')
 print(hmm_obj.transitions)
 print(hmm_obj.emissions)
-
+print(hmm_obj.generate(20))
