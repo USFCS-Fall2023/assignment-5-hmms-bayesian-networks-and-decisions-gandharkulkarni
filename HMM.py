@@ -1,10 +1,9 @@
-
-
 import random
 import argparse
 import codecs
 import os
 import numpy as np
+import sys
 
 # observations
 class Observation:
@@ -77,25 +76,37 @@ class HMM:
 
     def forward(self, observation):
         outputseq = observation.outputseq
-        states = list(self.transitions["#"].keys())
+        states = list(self.transitions.keys())
         total_states = len(states)
-        total_observations = len(observation.stateseq)
-        mat = np.zeros((total_states+1, total_observations+1))
-        mat[0][0] = 1.0
+        total_observations = len(observation.outputseq)
+        mat = np.zeros((total_states, total_observations))
+
+        # '#' state should be at index 0
+        for i in range(total_states):
+            if states[i]=='#':
+                states[i] = states[0]
+                states[0] = '#'
+                break
+
+        # Fill out first column
         for s in states:
-            mat[states.index(s) + 1][1] = self.transitions['#'][s] * self.emissions[s][outputseq[0]]
-        for i in range(1, total_observations+1):
+            if s != '#' and outputseq[0] in self.emissions[s]:
+                mat[states.index(s)][0] = self.transitions['#'][s] * self.emissions[s][outputseq[0]]
+
+        # Fill out rest of the columns
+        for i in range(1, total_observations):
             for s in states:
-                total = 0
-                for s2 in states:
-                    total += mat[states.index(s2)][i-1] * self.transitions[s2][s] * self.emissions[s2][outputseq[i-1]]
-                mat[states.index(s)+1][i] = total
+                if s != '#':
+                    total = 0.0
+                    for s2 in states:
+                        if s2 != '#' and outputseq[i] in self.emissions[s]:
+                            total += mat[states.index(s2)][i-1] * self.transitions[s][s2] * self.emissions[s][outputseq[i]]
+                    mat[states.index(s)][i] = total
+
         final_output = []
-        # for i in range(total_states):
-        #     for j in range(total_observations):
         max_indices = np.argmax(mat, axis=0)
-        print(max_indices)
-        print(mat)
+        # print(max_indices)
+        # print(mat)
         for i in max_indices:
             final_output.append(states[i]);
         return final_output
@@ -110,12 +121,39 @@ class HMM:
         """
 
 
+def read_obs_file(filename):
+    with open(filename, 'r') as file:
+        lines = file.readlines()
+    observations = []
+    for line in lines:
+        if line != '\n':
+            observations.append(Observation([],line.split()))
+    return observations
 
-hmm_obj = HMM()
-hmm_obj.load('two_english')
-# print(hmm_obj.transitions)
-# print(hmm_obj.emissions)
-observations = hmm_obj.generate(20)
-print(observations)
-matrix = hmm_obj.forward(observations)
-print(matrix)
+if __name__== '__main__':
+    if len(sys.argv) < 3:
+        print("Usage: hmm.py filename {--generate --forward --viterbi} n")
+        sys.exit(-1)
+    else:
+        hmm_obj = HMM()
+        parser = argparse.ArgumentParser(description="Usage: hmm.py filename {--generate --forward --viterbi}")
+        parser.add_argument('filename', type=str, help='Input file path')
+        parser.add_argument('--generate', type=int, help='Observation length')
+        parser.add_argument('--forward', type=str, help='Observation file')
+        parser.add_argument('--viterbi')
+        args = parser.parse_args()
+        generate = args.generate
+        forward = args.forward
+        viterbi = args.viterbi
+        filename = args.filename
+        if generate:
+            hmm_obj.load(filename)
+            print(hmm_obj.generate(generate))
+        if forward:
+            hmm_obj.load(filename)
+            observations = read_obs_file(forward)
+            for observation in observations:
+                output = hmm_obj.forward(observation)
+                print(output)
+                print(observation.outputseq)
+
