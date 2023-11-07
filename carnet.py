@@ -7,6 +7,7 @@ car_model = BayesianNetwork(
         ("Battery", "Ignition"),
         ("Ignition","Starts"),
         ("Gas","Starts"),
+        ("KeyPresent", "Starts"),
         ("Starts","Moves")
     ]
 )
@@ -47,7 +48,7 @@ cpd_starts = TabularCPD(
     variable_card=2,
     values=[
         [0.99, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01],
-        [0.99, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01, 0.01]
+        [0.01, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99]
     ],
     evidence=["Ignition", "Gas", "KeyPresent"],
     evidence_card=[2, 2, 2],
@@ -65,14 +66,13 @@ cpd_moves = TabularCPD(
 
 cpd_keypresent = TabularCPD (
     variable="KeyPresent", variable_card=2,
-    values=[0.7, 0.3],
-    state_names={"KeyPresent" : ["yes", "no"]},
-
+    values=[[0.7], [0.3]],
+    state_names={"KeyPresent": ["yes", "no"]}
 )
 
 
 # Associating the parameters with the model structure
-car_model.add_cpds( cpd_starts, cpd_ignition, cpd_gas, cpd_radio, cpd_battery, cpd_moves)
+car_model.add_cpds( cpd_starts, cpd_ignition, cpd_gas, cpd_radio, cpd_battery, cpd_moves, cpd_keypresent)
 
 car_infer = VariableElimination(car_model)
 
