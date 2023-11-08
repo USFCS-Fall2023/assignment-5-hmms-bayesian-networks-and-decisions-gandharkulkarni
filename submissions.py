@@ -1,6 +1,5 @@
 import HMM as driver
 from HMM import HMM
-import carnet
 
 def q2_submission():
     hmm_obj = HMM()
@@ -31,4 +30,8 @@ def q2_submission():
 
 print('\n\n Question 2 \n\n')
 q2_submission()
+
+print('\n\n Question 3 \n\n')
+import alarm
+import carnet
 
